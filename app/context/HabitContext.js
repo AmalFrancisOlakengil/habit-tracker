@@ -1,7 +1,7 @@
 // context/HabitContext.js
 "use client";  // Mark this file as a Client Component
 
-import { updateDoc, getDoc } from "firebase/firestore"; // Import Firestore methods
+import { updateDoc} from "firebase/firestore"; // Import Firestore methods
 
 import { createContext, useState, useContext, useEffect } from 'react';
 import { db } from '../firebase';  // Import your Firestore db
