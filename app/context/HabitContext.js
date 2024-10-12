@@ -1,10 +1,78 @@
 "use client";
 import { createContext, useState, useContext } from 'react';
+import { useCopilotReadable, useCopilotAction } from "@copilotkit/react-core";
 
 const HabitContext = createContext();
 
 export const HabitProvider = ({ children }) => {
   const [habits, setHabits] = useState([]);
+
+  // Make the habits state readable to Copilot
+  useCopilotReadable({
+    description: "The current list of habits",
+    value: JSON.stringify(habits),
+  });
+
+  // Define actions for Copilot
+  useCopilotAction({
+    name: "addHabit",
+    description: "Adds a new habit",
+    parameters: [
+      {
+        name: "habitName",
+        type: "string",
+        description: "The name of the habit to add",
+        required: true,
+      },
+      {
+        name: "description",
+        type: "string",
+        description: "Description of the habit",
+        required: false,
+      },
+    ],
+    handler: ({ habitName, description }) => {
+      addHabit(habitName, description);
+    },
+  });
+
+  useCopilotAction({
+    name: "deleteHabit",
+    description: "Deletes a habit by name",
+    parameters: [
+      {
+        name: "habitName",
+        type: "string",
+        description: "The name of the habit to delete",
+        required: true,
+      },
+    ],
+    handler: ({ habitName }) => {
+      deleteHabit(habitName);
+    },
+  });
+
+  useCopilotAction({
+    name: "toggleHabit",
+    description: "Toggles a habit's status for a given day",
+    parameters: [
+      {
+        name: "habitName",
+        type: "string",
+        description: "The name of the habit to toggle",
+        required: true,
+      },
+      {
+        name: "day",
+        type: "string",
+        description: "The day of the week (e.g., 'Mon', 'Tue')",
+        required: true,
+      },
+    ],
+    handler: ({ habitName, day }) => {
+      toggleHabit(habitName, day);
+    },
+  });
 
   const addHabit = (habitName, description) => {
     setHabits((prev) => [
@@ -12,8 +80,8 @@ export const HabitProvider = ({ children }) => {
       { 
         name: habitName, 
         completedDays: [], 
-        createdAt: new Date(), // Save the creation time and date
-        description: description || `Description of ${habitName}` // Add description, fallback to default if not provided
+        createdAt: new Date(),
+        description: description || `Description of ${habitName}`,
       }
     ]);
   };
@@ -58,3 +126,4 @@ export const HabitProvider = ({ children }) => {
 };
 
 export const useHabits = () => useContext(HabitContext);
+

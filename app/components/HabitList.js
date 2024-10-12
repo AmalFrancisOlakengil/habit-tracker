@@ -17,13 +17,13 @@ const HabitList = () => {
   const { habits, addHabit, toggleHabit, deleteHabit, resetAll, resetWeek } =
     useHabits();
   const [newHabit, setNewHabit] = useState("");
-  const [description, setDescription] = useState(""); // New state for description
+  const [description, setDescription] = useState("");
 
   const handleAddHabit = () => {
     if (newHabit) {
-      addHabit(newHabit, description); // Pass description to the addHabit function
+      addHabit(newHabit, description);
       setNewHabit("");
-      setDescription(""); // Clear description after adding
+      setDescription("");
     }
   };
 
@@ -48,7 +48,6 @@ const HabitList = () => {
           placeholder="New Habit"
           className="w-full"
         />
-        {/* Input for habit description */}
         <Input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
