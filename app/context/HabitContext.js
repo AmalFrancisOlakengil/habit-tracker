@@ -1,60 +1,60 @@
-// context/HabitContext.js
-"use client";  // Mark this file as a Client Component
-
-import { updateDoc} from "firebase/firestore"; // Import Firestore methods
-
-import { createContext, useState, useContext, useEffect } from 'react';
-import { db } from '../firebase';  // Import your Firestore db
-import { collection, addDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+"use client";
+import { createContext, useState, useContext } from 'react';
 
 const HabitContext = createContext();
 
 export const HabitProvider = ({ children }) => {
   const [habits, setHabits] = useState([]);
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "habits"), (snapshot) => {
-      const habitsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setHabits(habitsList);
-    });
-    
-    return () => unsubscribe(); // Cleanup subscription on unmount
-  }, []);
-
-  const addHabit = async (habitName) => {
-    await addDoc(collection(db, "habits"), { name: habitName, completedDays: [] });
+  const addHabit = (habitName, description) => {
+    setHabits((prev) => [
+      ...prev,
+      { 
+        name: habitName, 
+        completedDays: [], 
+        createdAt: new Date(), // Save the creation time and date
+        description: description || `Description of ${habitName}` // Add description, fallback to default if not provided
+      }
+    ]);
   };
 
-  const toggleHabit = async (habitId, day) => {
-    const habitRef = doc(db, "habits", habitId);
-    const habit = habits.find(habit => habit.id === habitId);
-    const newCompletedDays = habit.completedDays.includes(day)
-      ? habit.completedDays.filter((d) => d !== day)
-      : [...habit.completedDays, day];
-
-    await updateDoc(habitRef, { completedDays: newCompletedDays });
+  const toggleHabit = (habitName, day) => {
+    setHabits((prev) =>
+      prev.map((habit) =>
+        habit.name === habitName
+          ? {
+              ...habit,
+              completedDays: habit.completedDays.includes(day)
+                ? habit.completedDays.filter((d) => d !== day)
+                : [...habit.completedDays, day],
+            }
+          : habit
+      )
+    );
   };
 
-  const deleteHabit = async (habitId) => {
-    const habitRef = doc(db, "habits", habitId);
-    await deleteDoc(habitRef);
+  const deleteHabit = (habitName) => {
+    setHabits((prev) => prev.filter((habit) => habit.name !== habitName));
   };
 
-  const resetAll = async () => {
-    const batch = db.batch();
-    habits.forEach(habit => {
-      const habitRef = doc(db, "habits", habit.id);
-      batch.delete(habitRef);
-    });
-    await batch.commit();
+  const resetAll = () => {
+    setHabits([]);
+  };
+
+  const resetWeek = () => {
+    setHabits((prev) => 
+      prev.map((habit) => ({
+        ...habit,
+        completedDays: []
+      }))
+    );
   };
 
   return (
-    <HabitContext.Provider value={{ habits, addHabit, toggleHabit, deleteHabit, resetAll }}>
+    <HabitContext.Provider value={{ habits, addHabit, toggleHabit, deleteHabit, resetAll, resetWeek }}>
       {children}
     </HabitContext.Provider>
   );
 };
 
 export const useHabits = () => useContext(HabitContext);
-
